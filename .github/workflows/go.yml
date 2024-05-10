@@ -23,7 +23,7 @@ jobs:
       - uses: golangci/golangci-lint-action@v2
         with:
           # must be specified without patch version
-          version: v1.46
+          version: v1.57
 
   build:
     runs-on: ubuntu-latest
