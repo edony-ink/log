@@ -1,3 +1,4 @@
+// Package log is a well formatted golang logging library.
 package log
 
 import (
@@ -117,7 +118,7 @@ func (f *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
 // Init setup SWLogger before running
 func (logger *SWLog) Init(logFile string, level logrus.Level, log2STD bool) {
 	if logger.isSetup {
-		logrus.Print("no need to setup, swlogger is already setup!")
+		logger.Debug("no need to setup, swlogger is already setup!")
 		return
 	}
 
