@@ -55,6 +55,8 @@ type SWLog struct {
 	skip int
 	// isSetup is to make sure SWLog has been setup
 	isSetup bool
+	// raw logging without format
+	raw bool
 }
 
 // Formatter implements logrus.Formatter interface.
@@ -115,6 +117,21 @@ func (f *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
 	return []byte(output), nil
 }
 
+type STDFormatter struct {
+	LogFormat string
+	// file name and line number where calling the LOG/INFO/DEBUG...
+	FileName string
+	// function name where calling the LOG/INFO/DEBUG...
+	FuncName string
+}
+
+func (f *STDFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+	output := "%msg%\n"
+	output = strings.Replace(output, "%msg%", entry.Message, 1)
+
+	return []byte(output), nil
+}
+
 // Init setup SWLogger before running
 func (logger *SWLog) Init(logFile string, level logrus.Level, log2STD bool) {
 	if logger.isSetup {
@@ -143,7 +160,6 @@ func (logger *SWLog) Init(logFile string, level logrus.Level, log2STD bool) {
 				logrus.Fatalf("Fail to mkdir %s; %s", dir, err.Error())
 			}
 		}
-
 	}
 
 	// init file logrus logger
@@ -192,9 +208,23 @@ func (logger *SWLog) Init(logFile string, level logrus.Level, log2STD bool) {
 	logger.isSetup = true
 }
 
+func (logger *SWLog) SetRawSTDLogging(isRaw bool) {
+	logger.raw = isRaw
+	if logger.raw {
+		logger.STDLogger.SetFormatter(&STDFormatter{})
+	} else {
+		logger.STDLogger.SetFormatter(&Formatter{})
+	}
+}
+
 func (logger *SWLog) formatterDecorator(filename string, funcname string) {
-	(logger.STDLogger.Formatter).(*Formatter).FileName = filename
-	(logger.STDLogger.Formatter).(*Formatter).FuncName = funcname
+	if logger.raw {
+		(logger.STDLogger.Formatter).(*STDFormatter).FileName = filename
+		(logger.STDLogger.Formatter).(*STDFormatter).FuncName = funcname
+	} else {
+		(logger.STDLogger.Formatter).(*Formatter).FileName = filename
+		(logger.STDLogger.Formatter).(*Formatter).FuncName = funcname
+	}
 	(logger.FileLogger.Formatter).(*Formatter).FileName = filename
 	(logger.FileLogger.Formatter).(*Formatter).FuncName = funcname
 }
@@ -466,6 +496,7 @@ var (
 	// SWLogger is global logging instance, which need to call `SWLog.Init()` to setup before running
 	SWLogger = &SWLog{
 		isSetup: false,
+		raw:     false,
 	}
 
 	// LevelFromStr map configuration string with log level

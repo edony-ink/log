@@ -131,3 +131,10 @@ func TestGetLogLevel(t *testing.T) {
 		t.Fatal("GetLogLevel failed")
 	}
 }
+
+func TestSetRawSTDLogging(t *testing.T) {
+	SWLogger.Init(testLogFile, logrus.DebugLevel, true)
+	SWLogger.SetRawSTDLogging(true)
+
+	SWLogger.Infof("test %s and %f in STD", "raw logging", 1.223)
+}
