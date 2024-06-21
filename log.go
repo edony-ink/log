@@ -56,7 +56,7 @@ type SWLog struct {
 	// isSetup is to make sure SWLog has been setup
 	isSetup bool
 	// raw logging without format
-	raw bool
+	isRaw bool
 }
 
 // Formatter implements logrus.Formatter interface.
@@ -117,7 +117,7 @@ func (f *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
 	return []byte(output), nil
 }
 
-type STDFormatter struct {
+type NoFormatter struct {
 	LogFormat string
 	// file name and line number where calling the LOG/INFO/DEBUG...
 	FileName string
@@ -125,7 +125,7 @@ type STDFormatter struct {
 	FuncName string
 }
 
-func (f *STDFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+func (f *NoFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	output := "%msg%\n"
 	output = strings.Replace(output, "%msg%", entry.Message, 1)
 
@@ -209,18 +209,18 @@ func (logger *SWLog) Init(logFile string, level logrus.Level, log2STD bool) {
 }
 
 func (logger *SWLog) SetRawSTDLogging(isRaw bool) {
-	logger.raw = isRaw
-	if logger.raw {
-		logger.STDLogger.SetFormatter(&STDFormatter{})
+	logger.isRaw = isRaw
+	if logger.isRaw {
+		logger.STDLogger.SetFormatter(&NoFormatter{})
 	} else {
 		logger.STDLogger.SetFormatter(&Formatter{})
 	}
 }
 
 func (logger *SWLog) formatterDecorator(filename string, funcname string) {
-	if logger.raw {
-		(logger.STDLogger.Formatter).(*STDFormatter).FileName = filename
-		(logger.STDLogger.Formatter).(*STDFormatter).FuncName = funcname
+	if logger.isRaw {
+		(logger.STDLogger.Formatter).(*NoFormatter).FileName = filename
+		(logger.STDLogger.Formatter).(*NoFormatter).FuncName = funcname
 	} else {
 		(logger.STDLogger.Formatter).(*Formatter).FileName = filename
 		(logger.STDLogger.Formatter).(*Formatter).FuncName = funcname
@@ -496,7 +496,7 @@ var (
 	// SWLogger is global logging instance, which need to call `SWLog.Init()` to setup before running
 	SWLogger = &SWLog{
 		isSetup: false,
-		raw:     false,
+		isRaw:   false,
 	}
 
 	// LevelFromStr map configuration string with log level
